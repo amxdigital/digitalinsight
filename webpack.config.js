@@ -88,13 +88,15 @@ module.exports = (env, options) => {
                 {
                     test: /\.(woff|woff2|eot|ttf|svg)$/,
                     type: "asset/resource", // webpack 5 way of handling
-                    ...(isDevelopment ? {
-                        generator : {
-                            filename : pathData => {
-                                return `/[name][ext][query]`
-                            }
-                        }
-                    } : {})
+                    ...(isDevelopment
+                        ? {
+                              generator: {
+                                  filename: pathData => {
+                                      return `/[name][ext][query]`;
+                                  }
+                              }
+                          }
+                        : {})
                     // use: [
                     //     {
                     //         loader: 'file-loader',
@@ -133,13 +135,15 @@ module.exports = (env, options) => {
                 {
                     test: /\.(gif|png)$/,
                     type: "asset/resource", // webpack 5 way of handling
-                    ...(isDevelopment ? {
-                        generator : {
-                            filename : pathData => {
-                                return `/[name][ext][query]`
-                            }
-                        }
-                    } : {})
+                    ...(isDevelopment
+                        ? {
+                              generator: {
+                                  filename: pathData => {
+                                      return `/[name][ext][query]`;
+                                  }
+                              }
+                          }
+                        : {})
                     // use: [
                     //     {
                     //         loader: 'url-loader',
@@ -162,8 +166,10 @@ module.exports = (env, options) => {
                 favicon: "./src/styles/amx-favicon.ico"
             }),
             new MiniCssExtractPlugin({
-                filename: isDevelopment ? "[name].css" : "[name].[fullhash].css",
-                chunkFilename: isDevelopment ? "[name].css" : "[name].[fullhash].css"
+                // filename: isDevelopment ? "[name].css" : "[name].[fullhash].css",
+                filename: "[name].css",
+                // chunkFilename: isDevelopment ? "[name].css" : "[name].[fullhash].css"
+                chunkFilename: "[name].css"
             }),
             new webpack.HotModuleReplacementPlugin(),
             () => {
