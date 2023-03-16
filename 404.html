@@ -1,1 +1,60 @@
-<!doctype html><html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Cherry-Insights</title><link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700" rel="stylesheet"/><base href="/"/><script defer="defer" src="index.bundle.js"></script><link href="index.css" rel="stylesheet"/><link rel="icon" href="amx-favicon.ico"><script defer="defer" src="index.bundle.js"></script><link href="index.css" rel="stylesheet"></head><body><div id="app"></div></body></html>
+<!doctype html><html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>index</title><link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700" rel="stylesheet"/><link rel="icon" href="amx-favicon.ico"><script defer="defer" src="index.bundle.js"></script><link href="index.css" rel="stylesheet"></head><body><div id="app"></div><script>!(function () {
+                var e,
+                    n = function () {
+                        var e = 0.01 * window.innerHeight;
+                        document.documentElement.style.setProperty("--vh", e + "px");
+                    };
+                n(),
+                    window.addEventListener("resize", function () {
+                        clearInterval(e),
+                            (e = setTimeout(function () {
+                                n();
+                            }, 400));
+                    });
+            })();
+
+            function getJson(str) {
+                var json;
+                try {
+                    json = JSON.parse(str);
+                } catch (e) {
+                    console.error("Error in config: ", e);
+                    return false;
+                }
+                return json;
+            }
+
+            window.CONST = {
+                remoteServerUrl: "",
+                remoteJsUrl:
+                    window.location.href.indexOf("cherrybase.github.io") > -1
+                        ? "https://cherrybase.github.io/cherry-insights/"
+                        : window.location.href.indexOf("amxdigital.github.io") > -1
+                        ? "https://amxdigital.github.io/digitalinsight/"
+                        : "https://digitalinsight.pages.dev/"
+            };
+
+            var config = getJson(window.localStorage.getItem("debugConfig"));
+            if (config) {
+                if (config.remoteServerUrl) window.CONST.remoteServerUrl = config.remoteServerUrl;
+                if (config.remoteJsUrl) window.CONST.remoteJsUrl = config.remoteJsUrl;
+            }
+
+            var head = document.getElementsByTagName("head")[0];
+
+            var js = document.createElement("script");
+            js.type = "text/javascript";
+            js.src = window.CONST.remoteJsUrl + "/index.bundle.js";
+
+            var css = document.createElement("link");
+            css.rel = "stylesheet";
+            css.href = window.CONST.remoteJsUrl + "/index.css";
+
+            var link = document.createElement("link");
+            link.type = "image/x-icon";
+            link.rel = "shortcut icon";
+            link.href = window.CONST.remoteJsUrl + "/favicon.ico";
+
+            head.appendChild(css);
+            head.appendChild(js);
+            head.appendChild(link);</script></body></html>
