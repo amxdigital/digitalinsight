@@ -17,16 +17,23 @@ import { ErrorBoundary, GlobalModal, ToastUtil } from "./modules/utils";
 
 __webpack_public_path__ = window.CONST?.remoteJsUrl
     ? `${window.CONST?.remoteJsUrl}/dist/`
-    : window.location.href.indexOf("github.io") > -1
+    : window.location.href.indexOf("cherrybase.github.io") > -1
     ? `https://cherrybase.github.io/cherry-insights/`
-    : window.location.href.indexOf(".pages.dev") > -1
+    : window.location.href.indexOf("amxdigital.github.io") > -1
+    ? "https://amxdigital.github.io/digitalinsight/"
+    : window.location.href.indexOf("digitalinsight.pages.dev") > -1
     ? "https://digitalinsight.pages.dev/"
     : `"https://localhost:3000/dist/`;
 
 const Root = () => (
     <Provider store={store}>
-        <BrowserRouter {...(window.location.href.indexOf("github.io") > -1 ? { basename: "/cherry-insights" } : {})}>
-            {" "}
+        <BrowserRouter
+            {...(window.location.href.indexOf("cherrybase.github.io") > -1
+                ? { basename: "/cherry-insights" }
+                : window.location.href.indexOf("amxdigital.github.io") > -1
+                ? { basename: "/digitalinsight" }
+                : {})}
+        >
             {/* https://github.com/facebook/create-react-app/issues/1765 */}
             <ErrorBoundary>
                 <div className="app">
