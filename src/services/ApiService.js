@@ -117,9 +117,10 @@ export class ApiService {
 
 export const Api = {
     root: new ApiService({
-        prefix:
-            window.location.href.indexOf("github.io") > -1
-                ? "https://apib-kwt.almullaexchange.com/xms/api/v1"
-                : "https://api-kwt.almullaexchange.com/xms/api/v1"
+        prefix: window.CONST?.remoteServerUrl
+            ? window.CONST?.remoteServerUrl
+            : window.location.href.indexOf("github.io") > -1
+            ? "https://apib-kwt.almullaexchange.com/xms/api/v1"
+            : "https://api-kwt.almullaexchange.com/xms/api/v1"
     })
 };

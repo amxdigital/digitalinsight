@@ -37,7 +37,10 @@
             }
 
             window.CONST = {
-                remoteServerUrl: "",
+                remoteServerUrl:
+                    window.location.href.indexOf("github.io") > -1
+                        ? "https://apib-kwt.almullaexchange.com/xms/api/v1"
+                        : "https://api-kwt.almullaexchange.com/xms/api/v1",
                 remoteJsUrl:
                     window.location.href.indexOf("cherrybase.github.io") > -1
                         ? "https://cherrybase.github.io/cherry-insights/"

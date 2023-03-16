@@ -162,7 +162,6 @@ module.exports = (env, options) => {
                 template: "./src/index.html",
                 // base: isDevelopment ? "" : env.npm_config_appbaseUrl || "",
                 filename: "index.html",
-                favicon: "./src/styles/amx-favicon.ico",
                 excludeChunks: ["index"]
             }),
             new MiniCssExtractPlugin({
