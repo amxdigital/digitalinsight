@@ -198,6 +198,16 @@ export const getFilteredDisplayFormats = () => {
     return result;
 };
 
+export const getDayFilteredDisplayFormats = () => {
+    let result = {};
+    displayFormatsArr.forEach(el => {
+        if (el.name != "week" && el.name != "month" && el.name != "quarter" && el.name != "year") {
+            result[el.name] = el.value;
+        }
+    });
+    return result;
+};
+
 export const colorArray = [
     "#FF6633",
     "#FFB399",
@@ -250,3 +260,24 @@ export const colorArray = [
     "#99E6E6",
     "#6666FF"
 ];
+
+export const getReportData = (profileData)=> {
+    let columnHeaders = [
+      "CIVIL ID",
+      "CUSTOMER NAME",
+      "EMAIL ID",
+      "COUNTRY NAME",
+      "MOBILE NO.",
+      "WHATSAPP NO."
+    ];
+    let rows = profileData.map(data => ([
+        `${data.identityInt || "-"}`,
+        `${data.name || "-"}`,
+        `${data.emailId || "-"}`,
+        `${data.countryName || "-"}`,
+        `${data.mobileNo || "-"}`,
+        `${data.whatsupNo || "-"}`,
+      ])
+    );
+    return {columnHeaders, rows};
+}

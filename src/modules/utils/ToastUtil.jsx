@@ -16,7 +16,7 @@ class ToastUtil extends Component {
     static success(msg) {
         toast.success(
             <div className="custom-toast">
-                <div className="title-container">
+                <div className="title-container success">
                     <i className="fa fa-check-circle" />
                     &nbsp;
                     <span className="title">SUCCESS</span>
@@ -28,7 +28,7 @@ class ToastUtil extends Component {
     static error(msg, title) {
         toast.error(
             <div className="custom-toast">
-                <div className="title-container">
+                <div className="title-container error">
                     <i className="fa fa-times-circle" />
                     &nbsp;
                     <span className="title">{title || "ERROR"}</span>
@@ -40,8 +40,8 @@ class ToastUtil extends Component {
     static warn(msg) {
         toast.warn(
             <div className="custom-toast">
-                <div className="title-container">
-                    <i className="fa fa-exclamation-circle" />
+                <div className="title-container warning">
+                    <i className="fa fa-exclamation-triangle" />
                     &nbsp;
                     <span className="title">WARNING</span>
                 </div>
@@ -53,8 +53,8 @@ class ToastUtil extends Component {
     static info(msg) {
         toast.info(
             <div className="custom-toast">
-                <div className="title-container">
-                    <i className="fa fa-question-circle" />
+                <div className="title-container info">
+                    <i className="fa fa-info-circle" />
                     &nbsp;
                     <span className="title">INFO</span>
                 </div>

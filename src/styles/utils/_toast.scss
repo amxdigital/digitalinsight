@@ -1,7 +1,13 @@
 .toast-container {
+    .Toastify__toast-icon {
+        display: none;
+    }
     .custom-toast {
         .title-container {
-            margin: 6px 0 6px 0;
+            margin: 0px 0 6px 0;
+            i {
+                margin-right: 3px;
+            }
             .title {
                 font-weight: 200;
             }
@@ -14,8 +20,21 @@
                 }
             }
         }
+        .info {
+            color: #3498db;
+        }
+        .warning {
+            color: #f1c40f;
+        }
+        .error {
+            color: #e74c3c;
+        }
+        .success {
+            color: #07bc0c;
+        }
+
         .desc {
-            font-size: 14px;
+            font-size: 14.5px;
         }
     }
     .toast-progress {

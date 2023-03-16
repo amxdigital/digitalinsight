@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Table } from "reactstrap";
 import { useTable, useSortBy, useFilters, usePagination } from "react-table";
-import { displayFormatsMap, defaultDisplayFormat, getFilteredDisplayFormats } from "@modules/Charts/constants";
+import { displayFormatsMap, defaultDisplayFormat, getFilteredDisplayFormats, getDayFilteredDisplayFormats, getReportData } from "@modules/Charts/constants";
 import { Api } from "@services/ApiService";
 import FormField from "@modules/Common/FormField";
 import { Row, Col, Button, Input, CustomInput } from "reactstrap";
+import { ToastUtil } from "@modules/utils";
+import Util from "@modules/utils/Util";
 
 const DefaultColumnFilter = ({
     column: {
@@ -61,9 +63,15 @@ const Filter = ({ column }) => {
 };
 
 export default function UserJourney() {
-    const [loading, setLoading] = useState([]);
+    const [loading, setLoading] = useState(false);
 
     const [opts, setOpts] = useState([]);
+    const [profileSelectOpts, setProfileSelectOpts] = useState([]);
+    const [disableEventFilters, setDisableEventFilters] = useState({column: false, profile: false});
+    const [showProfileNamefield,  setShowProfileNamefield] = useState(false);
+    const [disableAddProfileNameBtn, setDisableAddProfileNameBtn] = useState(true);
+    const [reportPeriodVal, setReportPeriodVal] = useState([]);
+    const [generateReportLoading, setGenerateReportLoading] = useState(false);
     const [selectedOpt, setSelectedOpt] = useState([]);
 
     const [tableStuff, setTableStuff] = useState({});
@@ -74,6 +82,8 @@ export default function UserJourney() {
 
     const displayFormatRef = useRef();
     const columnsConfigRef = useRef();
+    const profileSelectRef = useRef();
+    const profileNameRef = useRef();
     const timeRangeMinRef = useRef();
 
     useEffect(async () => {
@@ -91,7 +101,11 @@ export default function UserJourney() {
             );
             let results = resp.data.results[0].metaEventDoc;
             setOpts(results.map(el => ({ label: el.eventDesc ? el.eventDesc : el.eventName, value: el.eventName })));
-        } catch (error) {}
+            
+            fetchProfileOpts();
+        } catch (error) {
+            console.log(error)
+        }
 
         return () => {
             console.log("UserJourney mount - setOpts cleanup ");
@@ -102,6 +116,7 @@ export default function UserJourney() {
         console.log("UserJourney mount ");
 
         setDisplayFormat(defaultDisplayFormat);
+        setReportPeriodVal(defaultDisplayFormat);
 
         const displayFormatDetails = displayFormatsMap[defaultDisplayFormat];
         const displayFormatSuccessor = displayFormatsMap[displayFormatDetails.successor];
@@ -138,10 +153,32 @@ export default function UserJourney() {
         return resp.data.results;
     };
 
+    const fetchProfileOpts = async() => {
+        let profileFilterResp = await Api.root.get(
+            "/profile/fetch",
+            {},
+            {
+                headers: {consumerKey: "1fxb4orbwe8sr"}
+            }
+        );
+        let profileFilterResults = profileFilterResp.data.results[0].profile;
+        setProfileSelectOpts(profileFilterResults.map(el => ({ label: el.filterName, value: el.filterName, eventNames: el.eventNames})));
+    }
+
+    const onChangeEventFilters = async(field, newVal) => {
+        if(field == "COLUMN" && newVal.length !== 0) {
+            setDisableEventFilters({column: false, profile: true})
+        } else if (field == "PROFILE" && newVal !== null) {
+            setDisableEventFilters({column: true, profile: false})
+        } else {
+            setDisableEventFilters({column: false, profile: false})
+        }
+    }
+
     const onClickSearch = async () => {
         if ([displayFormatRef.current.isValid()].includes(false)) return;
-        let configuredCols = columnsConfigRef.current.val() || [];
-        let configuredColsList = configuredCols.map(el => el.value);
+        let configuredCols = columnsConfigRef.current.val() ? columnsConfigRef.current.val() : profileSelectRef.current.val() ? profileSelectRef.current.val().eventNames : [];
+        let configuredColsList = columnsConfigRef.current.val() ? configuredCols.map(el => el.value) : profileSelectRef.current.val() ? configuredCols : [];
         let data = await fetchData(timeRange.min, timeRange.max, configuredColsList);
         console.log(
             "UserJourney - Fetched data between " +
@@ -158,6 +195,101 @@ export default function UserJourney() {
         }));
     };
 
+    const onAddProfile = () => {
+        setShowProfileNamefield(true); 
+        setDisableAddProfileNameBtn(true); 
+        setDisableEventFilters({column: false, profile: true})
+    }
+
+    const onCloseProfileName = () => {
+        setShowProfileNamefield(false); 
+        setDisableEventFilters({column: false, profile: false})
+    }
+
+    const onChangeProfileName = async() => {
+        console.log(profileNameRef.current.val())
+        if(profileNameRef.current.val() !== ""){
+            setDisableAddProfileNameBtn(false)
+        } else {
+            setDisableAddProfileNameBtn(true)
+        }
+    }
+
+    const onSaveProfile = async() => {
+        setShowProfileNamefield(true);
+        if ([columnsConfigRef.current.isValid()].includes(false)) return;
+        
+        /*  Duplicate Profile name/event check */
+        let columnEventVal = columnsConfigRef.current.val().map(el => el.value);
+        let profileEventList = profileSelectOpts.map(el => el.eventNames);
+        if (columnEventVal.length <= 1) return ToastUtil.info('Minimum two events must be selected');
+        if (profileSelectOpts.find(el => el.label.toUpperCase() === profileNameRef.current.val().toUpperCase())) return ToastUtil.error('Profile name already exists');
+        let duplicateEvents = profileEventList.filter(el => {
+            if (el.length === columnEventVal.length) return el.every((v,i) => columnEventVal.includes(v))
+        })
+        if (duplicateEvents.length !== 0) return ToastUtil.error('Profile with same events already exists');
+        let newProfileName = profileNameRef.current.val();
+        
+        try {
+            setLoading(true);
+            let eventNameList = columnsConfigRef.current.val().map(e => e.value);
+            await Api.root.post("/profile/save",
+                {
+                    eventNames: eventNameList,
+                    filterName: newProfileName
+                },
+                {
+                    headers: {consumerKey: "1fxb4orbwe8sr"}
+                }
+            );
+            fetchProfileOpts();
+            setShowProfileNamefield(false);
+            setLoading(false);
+            ToastUtil.success(`${newProfileName} profile added`)
+        } catch(error){
+            console.log(error)
+        }
+    }
+
+    const onChangeReportPeriod = newVal => {
+        setReportPeriodVal(newVal)
+    };
+
+    const onGenerateReport = async() => {
+        if ([profileSelectRef.current.isValid()].includes(false)) return;
+        try {
+            setGenerateReportLoading(true);
+            let resp = await Api.root.post(
+                '/customer/Info', 
+                {
+                    dateRange1: timeRange.min,
+                    dateRange2: timeRange.max,
+                    displayFormat: reportPeriodVal.label,
+                    eventNameList: profileSelectRef.current.val().eventNames
+                },
+                {
+                    headers: {
+                        consumerKey: "1fxb4orbwe8sr"
+                    }
+                }
+            )
+            let profileData = resp.data.results[0].lstCust;
+            console.log(profileData);
+            if (profileData.length === 0) { 
+                return ToastUtil.error('No records available');
+            } else {
+                let reportData = getReportData(profileData)
+                let allRows = [reportData.columnHeaders].concat(reportData.rows);
+                let fileName = `User Journey Report - ${reportPeriodVal.label}`
+                Util.exportToXLS(allRows, fileName)
+            }
+        } catch(error) {
+            console.log(error);
+        } finally {
+            setGenerateReportLoading(false);
+        }
+    }
+
     let data = React.useMemo(() => {
         console.log("memorising data");
         return tableStuff.data || [];
@@ -172,8 +304,8 @@ export default function UserJourney() {
             }
         ];
         let cols = (tableStuff.columns || []).map(el => ({
-            Header: el.label,
-            accessor: el.value,
+            Header: el.label ? el.label: el,
+            accessor: el.value ? el.value: el,
             Cell: row => row.value || "-"
         }));
         return cols.length ? defaultsCols.concat(cols) : [];
@@ -215,78 +347,132 @@ export default function UserJourney() {
     console.log("#render#", { columns, data, tableStuff });
     return (
         <>
-            <div className="table-filters row mb-3">
-                <div className="col-lg-12">
-                    <div className="row">
-                        <div className="col-lg-3 mb-2">
-                            <FormField
-                                ref={displayFormatRef}
-                                controlled={true}
-                                type="select"
-                                id="displayFormat"
-                                label="Unit"
-                                options={Object.entries(getFilteredDisplayFormats()).map(([key, value]) => ({
-                                    label: key.toUpperCase(),
-                                    value: key
-                                }))}
-                                value={displayFormat}
-                                onChange={onChangeDisplayFormat}
-                            />
-                        </div>
-                        <div className="col-lg-3 mb-2">
-                            <div className="form-group">
-                                <label className="form-control-label" htmlFor="start-time">
-                                    Start
-                                </label>
-                                <input
-                                    style={{ width: "100%", color: !timeRange.min ? "transparent" : "" }}
-                                    className={"form-control-alternative form-control"}
-                                    type="date"
-                                    id="start-time"
-                                    value={timeRange.min ? new Date(timeRange.min).toISOString().split("T")[0] : ""}
-                                    onChange={e =>
-                                        setTimeRange(prev => ({ ...prev, min: new Date(e.target.value).valueOf() }))
-                                    }
+            <div className={loading ? "loader-inline" : ""}>
+                <div className="user-journey table-filters row mb-3">
+                    <div className="col-lg-12">
+                        <div className="row">
+                            <div className="col-lg-3 mb-2">
+                                <FormField
+                                    ref={displayFormatRef}
+                                    controlled={true}
+                                    type="select"
+                                    id="displayFormat"
+                                    label="Unit"
+                                    options={Object.entries(getFilteredDisplayFormats()).map(([key, value]) => ({
+                                        label: key.toUpperCase(),
+                                        value: key
+                                    }))}
+                                    value={displayFormat}
+                                    onChange={onChangeDisplayFormat}
                                 />
                             </div>
-                            {/* <FormField
-                                ref={timeRangeMinRef}
-                                type="date"
-                                id="timeRangeMin"
-                                label="Start"
-                            /> */}
-                        </div>
-                        <div className="col-lg-3 mb-2">
-                            <div className="form-group">
-                                <label className="form-control-label" htmlFor="end-time">
-                                    End
-                                </label>
-                                <input
-                                    style={{ width: "100%", color: !timeRange.max ? "transparent" : "" }}
-                                    className={"form-control-alternative form-control"}
+                            <div className="col-lg-3 mb-2">
+                                <div className="form-group">
+                                    <label className="form-control-label" htmlFor="start-time">
+                                        Start
+                                    </label>
+                                    <input
+                                        style={{ width: "100%", color: !timeRange.min ? "transparent" : "" }}
+                                        className={"form-control-alternative form-control"}
+                                        type="date"
+                                        id="start-time"
+                                        value={timeRange.min ? new Date(timeRange.min).toISOString().split("T")[0] : ""}
+                                        onChange={e =>
+                                            setTimeRange(prev => ({ ...prev, min: new Date(e.target.value).valueOf() }))
+                                        }
+                                    />
+                                </div>
+                                {/* <FormField
+                                    ref={timeRangeMinRef}
                                     type="date"
-                                    id="end-time"
-                                    value={timeRange.max ? new Date(timeRange.max).toISOString().split("T")[0] : ""}
-                                    onChange={e =>
-                                        setTimeRange(prev => ({ ...prev, max: new Date(e.target.value).valueOf() }))
-                                    }
+                                    id="timeRangeMin"
+                                    label="Start"
+                                /> */}
+                            </div>
+                            <div className="col-lg-3 mb-2">
+                                <div className="form-group">
+                                    <label className="form-control-label" htmlFor="end-time">
+                                        End
+                                    </label>
+                                    <input
+                                        style={{ width: "100%", color: !timeRange.max ? "transparent" : "" }}
+                                        className={"form-control-alternative form-control"}
+                                        type="date"
+                                        id="end-time"
+                                        value={timeRange.max ? new Date(timeRange.max).toISOString().split("T")[0] : ""}
+                                        onChange={e =>
+                                            setTimeRange(prev => ({ ...prev, max: new Date(e.target.value).valueOf() }))
+                                        }
+                                    />
+                                </div>
+                            </div>
+                            <div className="col-lg-7 mb-2 profile-select">
+                                <label className="form-control-label">Profile</label>
+                                <button className="btn btn-primary" title="Add Profile" onClick={onAddProfile}>
+                                    <i className="fa fa-plus" />
+                                </button>
+                                <FormField
+                                    ref={profileSelectRef}
+                                    type="select"
+                                    placeholder={`Select profile`}
+                                    options={profileSelectOpts}
+                                    isDisabled={disableEventFilters.profile}
+                                    onChange={newVal => onChangeEventFilters("PROFILE", newVal)}
+                                    isSearchable
+                                    isMulti={false}
+                                    isClearable={true}
                                 />
                             </div>
-                        </div>
-                        <div className="col-lg-9 mb-2">
-                            <FormField
-                                ref={columnsConfigRef}
-                                type="select"
-                                id="columnsConfig"
-                                placeholder={`configure columns`}
-                                options={opts}
-                                isSearchable
-                                isMulti
-                            />
-                        </div>
-                        <div className="col-lg-3 mb-2 d-flex align-items-start">
-                            <button className="btn btn-primary" onClick={onClickSearch}>
-                                <i className="fa fa-search" />
+                            <div className="col-lg-5 mb-2 report-period-section">
+                                <div className="report-select">
+                                    <FormField
+                                        controlled={true}
+                                        type="select"
+                                        placeholder="Select report period"
+                                        options={Object.entries(getDayFilteredDisplayFormats()).map(([key, value]) => ({
+                                            label: key.toUpperCase(),
+                                            value: key
+                                        }))}
+                                        value={reportPeriodVal}
+                                        onChange={onChangeReportPeriod}
+                                    />
+                                </div>
+                                <button className="btn btn-primary" title="Generate Report" disabled={generateReportLoading} onClick={onGenerateReport}>
+                                    {generateReportLoading ? "Loading..." : <i className="fa fa-download" />}
+                                </button>
+                            </div>
+                            <div className="col-lg-9 mb-2">
+                                <FormField
+                                    ref={columnsConfigRef}
+                                    type="select"
+                                    id="columnsConfig"
+                                    placeholder={`configure columns`}
+                                    options={opts}
+                                    isDisabled={disableEventFilters.column}
+                                    onChange={newVal => onChangeEventFilters("COLUMN", newVal)}
+                                    isSearchable
+                                    isMulti
+                                />
+                            </div>
+                            {showProfileNamefield 
+                            ?   <div className="col-lg-8 mb-2 add-profile-section">
+                                    <FormField
+                                        ref={profileNameRef}
+                                        type="text"
+                                        id="addProfile"
+                                        placeholder={`Enter Profile Name`}
+                                        onChange={onChangeProfileName}
+                                    />
+                                    <button className="btn btn-primary add" disabled={disableAddProfileNameBtn} onClick={onSaveProfile}>
+                                        Save
+                                    </button>
+                                    <button className="btn btn-primary" style={{margin: "0.5rem 0"}} onClick={onCloseProfileName}>
+                                        Close
+                                    </button>
+                                </div>
+                            :   ""}
+                            <button className="btn btn-primary search-btn" disabled={false} onClick={onClickSearch}>
+                                Search
                             </button>
                         </div>
                     </div>

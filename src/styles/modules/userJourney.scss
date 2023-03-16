@@ -1,0 +1,40 @@
+.user-journey {
+    .profile-select {
+        .form-control-label {
+            font-size: 1rem;
+        }
+        .btn {
+            font-size: 0.625rem;
+            height: 1.3rem;
+            border-radius: 1rem;
+            padding: 0px 0.3rem;
+            margin: 0px 0px 0.2rem 0.4rem;
+        }
+    }
+    .report-period-section {
+        margin-top: 2rem;
+        .report-select{
+            display: inline-block;
+            width: 50%;
+            margin-right: 10px;
+            font-size: 0.875rem;
+        }
+    }
+    .add-profile-section {
+        margin-top: -24px;
+        .form-group {
+            display: inline-block;
+            width: 60%;
+        }
+        .btn {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+        }
+        .add {
+            margin: 0.5rem 1rem;
+        }
+    }
+    .search-btn{
+        margin: 0 25rem 0.6rem;
+    }
+}
