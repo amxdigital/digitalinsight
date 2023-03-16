@@ -5,8 +5,7 @@
   "main": "index.js",
   "homepage": "https://cherrybase.github.io/cherry-insights",
   "scripts": {
-    "serve": "webpack serve --mode development",
-    "dev-server": "node webpack.devServer.js https",
+    "dev": "node webpack.devServer.js https",
     "build": "webpack --mode production",
     "predeploy": "npm run build && cp dist/index.html dist/404.html",
     "deploy": "gh-pages -d dist"

@@ -30,7 +30,6 @@ const PATH = `${HOST}/${buildFolder}`;
 const timestamp = new Date().getTime();
 
 module.exports = (env, options) => {
-    // const isDevelopment = process.env.NODE_ENV !== "production";
     const isDevelopment = options.mode !== "production";
 
     return {
@@ -161,14 +160,13 @@ module.exports = (env, options) => {
             new CleanWebpackPlugin(),
             new HtmlWebpackPlugin({
                 template: "./src/index.html",
-                base: isDevelopment ? "" : "https://cherrybase.github.io/cherry-insights/",
+                // base: isDevelopment ? "" : env.npm_config_appbaseUrl || "",
                 filename: "index.html",
-                favicon: "./src/styles/amx-favicon.ico"
+                favicon: "./src/styles/amx-favicon.ico",
+                excludeChunks: ["index"]
             }),
             new MiniCssExtractPlugin({
-                // filename: isDevelopment ? "[name].css" : "[name].[fullhash].css",
                 filename: "[name].css",
-                // chunkFilename: isDevelopment ? "[name].css" : "[name].[fullhash].css"
                 chunkFilename: "[name].css"
             }),
             new webpack.HotModuleReplacementPlugin(),
