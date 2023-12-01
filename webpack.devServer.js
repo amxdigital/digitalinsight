@@ -88,8 +88,8 @@ rimraf.sync("dist");
 
 if (process.argv[2] === "https") {
     var certOptions = {
-        key: fs.readFileSync(path.resolve("/Users/Vijay/Projects/key.pem")),
-        cert: fs.readFileSync(path.resolve("/Users/Vijay/Projects/cert.pem"))
+        key: fs.readFileSync(path.resolve("/Users/vj/Projects/key.pem")),
+        cert: fs.readFileSync(path.resolve("/Users/vj/Projects/cert.pem"))
     };
     https.createServer(certOptions, app).listen(PORT, () => {
         console.log(`App listening on port ${PORT}!\n`);

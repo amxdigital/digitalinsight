@@ -16,7 +16,7 @@ import Routes from "./routes";
 import { ErrorBoundary, GlobalModal, ToastUtil } from "./modules/utils";
 
 __webpack_public_path__ = window.CONST?.remoteJsUrl
-    ? window.CONST?.remoteJsUrl
+    ? window.CONST?.remoteJsUrl + "/"
     : window.location.href.indexOf("cherrybase.github.io") > -1
     ? "https://cherrybase.github.io/cherry-insights/"
     : window.location.href.indexOf("amxdigital.github.io") > -1
@@ -32,7 +32,7 @@ const Root = () => (
                 ? { basename: "/cherry-insights" }
                 : window.location.href.indexOf("amxdigital.github.io") > -1
                 ? { basename: "/digitalinsight" }
-                : {})}
+                : { basename: "/digital" })}
         >
             {/* https://github.com/facebook/create-react-app/issues/1765 */}
             <ErrorBoundary>
